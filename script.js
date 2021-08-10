@@ -2,7 +2,7 @@ let allStation = new Array;
 let selStation = new Array;
 
 let stationTextActive = '#fff'; // Цвет выбранной станции
-let stationTextNotActive = '#ddd'; // Цвет не выбраной станции
+let stationTextNotActive = '#999'; // Цвет не выбраной станции
 let stationTextHover = '#5947B3';
 
 let stationBgActive = '#5947B3'; // Цвет задника выбранной станции
@@ -166,6 +166,10 @@ function getSelectedStation(e) {
 
 $(window).on('load', function() {
     getAllStation();
+    $('.MetroMap_line_item').css('cursor', 'pointer')
+    $('.MetroMap_circle').css('cursor', 'pointer')
+    $('.MetroMap_station_item').css('cursor', 'pointer')
+
     $('.MetroMap_line_item').hover(
         function() {
             let lineId = $(this).attr('data-metro-map-node-id');
@@ -227,8 +231,9 @@ $(window).on('load', function() {
             let stationId = $(this).parent().attr('data-station')
             if (selStation.indexOf(stationId) == -1) {
                 $(this).parent().attr({
-                    'stroke-width': 2, 
+                    'stroke-width': 2,
                 }).css({
+                    cursor: pointer,
                     transition: `all ${transitionSpeed}`,
                 });
                 $(`[data-metro-map-node-id=${stationId}]`).children('.text').css({

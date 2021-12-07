@@ -233,7 +233,7 @@ $(window).on('load', function() {
                 $(this).parent().attr({
                     'stroke-width': 2,
                 }).css({
-                    cursor: pointer,
+                    cursor: 'pointer',
                     transition: `all ${transitionSpeed}`,
                 });
                 $(`[data-metro-map-node-id=${stationId}]`).children('.text').css({

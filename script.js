@@ -1,5 +1,6 @@
 let allStation = new Array;
 let selStation = new Array;
+let selLine = new Array;
 
 let stationTextActive = '#fff'; // Цвет выбранной станции
 let stationTextNotActive = '#999'; // Цвет не выбраной станции
@@ -18,15 +19,43 @@ let transitionSpeed = '0.35s'; // Скорость анимаций
 
 // Get all id
 function getAllStation() {
-    let AllElemdentsById = $('[data-metro-map-node-id]');
-    for (let i = 0; i < AllElemdentsById.length; i++) {
-        const el = AllElemdentsById[i];
+    let allElementsById = $('[data-metro-map-node-id]');
+    for (let i = 0; i < allElementsById.length; i++) {
+        const el = allElementsById[i];
         allStation.push($(el).attr('data-metro-map-node-id'));
     };
+    // Array.from(allElementsById).forEach(el => {
+    //     const tspans = $(el).children('text');
+    //     let text = '';
+    //     Array.from(tspans).forEach(elem => {
+    //         let elemText = $(elem).children('tspan').text();
+    //         if (!elemText.includes('-')) {
+    //             elemText += ' '
+    //         }
+    //         text += elemText;
+    //     })
+    //     allStation.push(text.trim())
+    // })
 };
+
+function getStationName(stationNameText) {
+    let text = '';
+    Array.from(stationNameText).forEach(el => {
+        const tspans = $(el).children('tspan');
+        Array.from(tspans).forEach(elem => {
+            let elemText = $(elem).text();
+            if (!elemText.includes('-')) {
+                elemText += ' '
+            }
+            text += elemText;
+        })
+    })
+    return text.trim();
+}
 
 function getSelectedStation(e) {
     let stationId = $(e.target).parents('.MetroMap_station_item').attr('data-metro-map-node-id'); // Получение id станции
+
     let targetStationText = $(e.target).parents('.MetroMap_station_item').children('.text'); // Выбор текста станции
     let targetStationBg = $(e.target).parents('.MetroMap_station_item').children('.MetroMap_bg'); // Выбор задника текста станции
     let stationMarker = $(`[data-station="${stationId}"]`); // Получение маркерка к станции
@@ -39,8 +68,13 @@ function getSelectedStation(e) {
     let targetLineLable = $(e.target).parents('.MetroMap_line_item').children('.MetroMap_label').children('text'); // Получение навзания линии
     let lineStation = $('[data-line]'); // Список станций по ID Линии
 
+    let stationNameText = $(`[data-metro-map-node-id="${stationId}"]`).children('text');
+    let stationNameMarked = $(`[data-metro-map-node-id="${markerId}"]`).children('text');
+
     if (allStation.indexOf(stationId) != -1) {
-        if (selStation.indexOf(stationId) != -1) {
+        let stationName = getStationName(stationNameText);
+
+        if (selStation.indexOf(stationName) != -1) {
             targetStationText.css({
                 fill: stationTextNotActive,
                 transition: `all ${transitionSpeed}`,
@@ -54,7 +88,7 @@ function getSelectedStation(e) {
                 stroke: sationMarkerNotActive,
                 transition: `all ${transitionSpeed}`,
             });
-            selStation.splice(selStation.indexOf(stationId), 1);
+            selStation.splice(selStation.indexOf(stationName), 1);
         } else {
             targetStationText.css({
                 fill: stationTextActive,
@@ -69,12 +103,13 @@ function getSelectedStation(e) {
                 stroke: sationMarkerActive,
                 transition: `all ${transitionSpeed}`,
             });
-            selStation.push(stationId);
+
+            selStation.push(stationName);
         };
     } else if (allStation.indexOf(lineId) != -1) {
-        if (selStation.indexOf(lineId) != -1) {
+        if (selLine.indexOf(lineId) != -1) {
             targetLineLable.css('font-weight', lineLableTextNotActive);
-            selStation.splice(selStation.indexOf(lineId), 1);
+
             for (let i = 0; i < lineStation.length; i++) {
                 const el = lineStation[i];
                 if ($(el).attr('data-line') == lineId) {
@@ -82,6 +117,10 @@ function getSelectedStation(e) {
                     for (let index = 0; index < elChildren.length; index++) {
                         const element = elChildren[index];
                         let elementId = $(element).attr('data-metro-map-node-id');
+
+                        let stationNameLine = $(`[data-metro-map-node-id="${elementId}"]`).children('text');
+                        let stationName = getStationName(stationNameLine);
+
                         $(element).children('.MetroMap_bg').css({
                             fill: stationBgNotActive,
                             opacity: 0,
@@ -91,23 +130,35 @@ function getSelectedStation(e) {
                             stroke: sationMarkerNotActive,
                             transition: `all ${transitionSpeed}`,
                         });
-                        selStation.splice(selStation.indexOf(elementId), 1);
+
+                        if (selStation.indexOf(stationName) != -1) {
+                            selStation.splice(selStation.indexOf(stationName), 1);
+                        }
                     };
+
                     $(el).children().children('text').css({
                         fill: stationTextNotActive,
                         transition: `all ${transitionSpeed}`,
                     });
                 };
             };
+
+            selLine.splice(selLine.indexOf(lineId), 1)
         } else {
             targetLineLable.css('font-weight', lineLableTextActive);
+
             for (let i = 0; i < lineStation.length; i++) {
                 const el = lineStation[i];
                 if ($(el).attr('data-line') == lineId) {
                     let elChildren = $(el).children();
+
                     for (let index = 0; index < elChildren.length; index++) {
                         const element = elChildren[index];
                         let elementId = $(element).attr('data-metro-map-node-id');
+
+                        let stationNameLine = $(`[data-metro-map-node-id="${elementId}"]`).children('text');
+                        let stationName = getStationName(stationNameLine);
+
                         $(element).children('.MetroMap_bg').css({
                             fill: stationBgActive,
                             opacity: 1,
@@ -117,18 +168,24 @@ function getSelectedStation(e) {
                             stroke: sationMarkerActive,
                             transition: `all ${transitionSpeed}`,
                         });
-                        selStation.push(elementId);
+                        if (selStation.indexOf(stationName) == -1) {
+                            selStation.push(stationName);
+                        }
                     }
+
                     $(el).children().children('text').css({
                         fill: stationTextActive,
                         transition: `all ${transitionSpeed}`,
                     });
                 };
             };
-            selStation.push(lineId);
+
+            selLine.push(lineId)
         };
     } else if (allStation.indexOf(markerId) != 1) {
-        if (selStation.indexOf(markerId) != -1) {
+        let stationName = getStationName(stationNameMarked);
+
+        if (selStation.indexOf(stationName) != -1) {
             markerStation.children('.text').css({
                 fill: stationTextNotActive,
                 transition: `all ${transitionSpeed}`,
@@ -142,7 +199,8 @@ function getSelectedStation(e) {
                 stroke: sationMarkerNotActive,
                 transition: `all ${transitionSpeed}`,
             });
-            selStation.splice(selStation.indexOf(markerId), 1);
+
+            selStation.splice(selStation.indexOf(stationName), 1);
         } else if (typeof markerId != 'undefined') {
             markerStation.children('.text').css({
                 fill: stationTextActive,
@@ -157,10 +215,12 @@ function getSelectedStation(e) {
                 stroke: sationMarkerActive,
                 transition: `all ${transitionSpeed}`,
             });
-            selStation.push(markerId);
+            
+            selStation.push(stationName);
         };
     };
     console.log(selStation);
+    console.log(JSON.parse(selStation));
 };
 
 

@@ -220,7 +220,6 @@ function getSelectedStation(e) {
         };
     };
     console.log(selStation);
-    console.log(JSON.parse(selStation));
 };
 
 

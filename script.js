@@ -229,7 +229,9 @@ function getSelectedStation(e) {
       selStation.push(stationName);
     }
   }
-  console.log(selStation);
+  if (selStation.length !== 0) {
+    console.log(selStation);
+  }
 }
 
 $(window).on("load", function () {
@@ -384,90 +386,136 @@ $(window).on("load", function () {
 });
 
 $(window).on("click", function (e) {
-  getSelectedStation(e);
+  if (e.target.tagName !== 'svg') {
+    getSelectedStation(e);
+  }
 });
 
-$(window).on('load', function () {
-  let map = document.querySelector(".mertro-map") || null;
-  let svg = map.querySelector('svg') || null;
+$(window).on('load', function() {
+  const svgImage = document.querySelector(".mertro-map svg");
+  const svgContainer = document.querySelector(".mertro-map");
 
-  if (map === null) return;
-  if (svg === null) return;
-
+  let viewBox = {x:0,y:0,w:svgImage.clientWidth,h:svgImage.clientHeight};
+  svgImage.setAttribute('viewBox', `${viewBox.x} ${viewBox.y} ${viewBox.w} ${viewBox.h}`);
+  const svgSize = {w:svgImage.clientWidth,h:svgImage.clientHeight};
+  let isPanning = false;
+  let startPoint = {x:0,y:0};
+  let endPoint = {x:0,y:0};;
   let scale = 1;
-  let panning = false;
-  let xoff = 0;
-  let yoff = 0;
-  let start = { x: 0, y: 0 };
-  
-  function setTransform () {
-    map.style.transform = "translate(" + xoff + "px, " + yoff + "px) scale(" + scale + ")";
+
+  svgContainer.onmousewheel = function(e) {
+    e.preventDefault();
+    let w = viewBox.w;
+    let h = viewBox.h;
+    let mx = e.offsetX;
+    let my = e.offsetY;    
+    let dw = w*Math.sign(e.deltaY)*0.05;
+    let dh = h*Math.sign(e.deltaY)*0.05;
+    let dx = dw*mx/svgSize.w;
+    let dy = dh*my/svgSize.h;
+    viewBox = {x:viewBox.x+dx,y:viewBox.y+dy,w:viewBox.w-dw,h:viewBox.h-dh};
+    scale = svgSize.w/viewBox.w;
+    // zoomValue.innerText = `${Math.round(scale*100)/100}`;
+    svgImage.setAttribute('viewBox', `${viewBox.x} ${viewBox.y} ${viewBox.w} ${viewBox.h}`);
   }
-  
-  map.onmousedown = function (e) {
-    e.preventDefault();
-    start = { x: e.clientX - xoff, y: e.clientY - yoff };
-    panning = true;
-  };
-  
-  map.onmouseup = function (e) {
-    panning = false;
-  };
-  
-  map.onmousemove = function (e) {
-    e.preventDefault();
-    if (!panning) {
-      return;
+
+
+  svgContainer.onmousedown = function(e){
+    isPanning = true;
+    startPoint = {x:e.x,y:e.y};   
+  }
+
+  svgContainer.onmousemove = function(e){
+    if (isPanning){
+    endPoint = {x:e.x,y:e.y};
+    let dx = (startPoint.x - endPoint.x)/scale;
+    let dy = (startPoint.y - endPoint.y)/scale;
+    let movedViewBox = {x:viewBox.x+dx,y:viewBox.y+dy,w:viewBox.w,h:viewBox.h};
+    svgImage.setAttribute('viewBox', `${movedViewBox.x} ${movedViewBox.y} ${movedViewBox.w} ${movedViewBox.h}`);
     }
-    xoff = e.clientX - start.x;
-    yoff = e.clientY - start.y;
-    setTransform();
-  };
-  
-  map.onwheel = function (e) {
-    e.preventDefault();
-    // take the scale into account with the offset
-    let xs = (e.clientX - xoff) / scale;
-    let ys = (e.clientY - yoff) / scale;
-    let delta = e.wheelDelta ? e.wheelDelta : -e.deltaY;
-  
-    // get scroll direction & set zoom level
-    delta > 0 ? (scale *= 1.2) : (scale /= 1.2);
-  
-    // reverse the offset amount with the new scale
-    xoff = e.clientX - xs * scale;
-    yoff = e.clientY - ys * scale;
-  
-    setTransform();
-  };
+  }
+
+  svgContainer.onmouseup = function(e){
+    if (isPanning){ 
+    endPoint = {x:e.x,y:e.y};
+    let dx = (startPoint.x - endPoint.x)/scale;
+    let dy = (startPoint.y - endPoint.y)/scale;
+    viewBox = {x:viewBox.x+dx,y:viewBox.y+dy,w:viewBox.w,h:viewBox.h};
+    svgImage.setAttribute('viewBox', `${viewBox.x} ${viewBox.y} ${viewBox.w} ${viewBox.h}`);
+    isPanning = false;
+    }
+  }
+
+  svgContainer.onmouseleave = function(e){
+    isPanning = false;
+  }
 })
-
-// let mapScale = 1;
-
-// $(window).bind("mousewheel", function (event) {
+// $(window).on('load', function () {
 //   let map = document.querySelector(".mertro-map") || null;
 //   let svg = map.querySelector('svg') || null;
 
 //   if (map === null) return;
 //   if (svg === null) return;
 
-//   function setTransform() {
-//     map.style.transform = "translate(" + xoff + "px, " + yoff + "px) scale(" + scale + ")";
+//   let scale = 1;
+//   let grabbing = false;
+//   let xoff = 0;
+//   let yoff = 0;
+//   let start = { x: 0, y: 0 };
+  
+//   function setTransform () {
+//     svg.style.transform = "translate(" + xoff + "px, " + yoff + "px) scale(" + scale + ")";
 //   }
-
-//   let svgSizes = svg.getBoundingClientRect();
-
-//   if (event.originalEvent.wheelDelta >= 0) {
-//     if (mapScale <= 2) {
-//       mapScale += 0.1;
-//       mapScale += 0.1;
-//       map.style["transform"] = `scale(${mapScale}, ${mapScale})`;
+  
+//   map.onmousedown = function (e) {
+//     e.preventDefault();
+//     start = { x: e.clientX - xoff, y: e.clientY - yoff };
+//     grabbing = true;
+//   };
+  
+//   map.onmouseup = function (e) {
+//     grabbing = false;
+//   };
+  
+//   map.onmousemove = function (e) {
+//     e.preventDefault();
+//     if (!grabbing) {
+//       return;
 //     }
-//   } else {
-//     if (svgSizes.height >= 1000) {
-//       mapScale -= 0.1;
-//       mapScale -= 0.1;
-//       map.style["transform"] = `scale(${mapScale}, ${mapScale})`;
-//     }
-//   }
-// });
+//     xoff = e.clientX - start.x;
+//     yoff = e.clientY - start.y;
+//     setTransform();
+//   };
+  
+//   map.onwheel = function (e) {
+//     // e.preventDefault();
+//     // var w = viewBox.w;
+//     // var h = viewBox.h;
+//     // var mx = e.offsetX;
+//     // var my = e.offsetY;    
+//     // var dw = w*Math.sign(e.deltaY)*0.05;
+//     // var dh = h*Math.sign(e.deltaY)*0.05;
+//     // var dx = dw*mx/svgSize.w;
+//     // var dy = dh*my/svgSize.h;
+//     // viewBox = {x:viewBox.x+dx,y:viewBox.y+dy,w:viewBox.w-dw,h:viewBox.h-dh};
+//     // scale = svgSize.w/viewBox.w;
+//     // zoomValue.innerText = `${Math.round(scale*100)/100}`;
+//     // svgImage.setAttribute('viewBox', `${viewBox.x} ${viewBox.y} ${viewBox.w} ${viewBox.h}`);
+
+//     e.preventDefault();
+
+//     // take the scale into account with the offset
+//     let xs = (e.clientX - xoff) / scale;
+//     let ys = (e.clientY - yoff) / scale;
+//     let delta = e.wheelDelta ? e.wheelDelta : -e.deltaY;
+  
+//     // get scroll direction & set zoom level
+//     delta > 0 ? (scale *= 1.2) : (scale /= 1.2);
+  
+//     // reverse the offset amount with the new scale
+//     xoff = e.clientX - xs * scale;
+//     yoff = e.clientY - ys * scale;
+  
+//     setTransform();
+//   };
+// })

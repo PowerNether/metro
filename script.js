@@ -1,6 +1,7 @@
 let allStation = new Array();
 let selStation = new Array();
 let selLine = new Array();
+let isPanning = false;
 
 let stationTextActive = "#fff"; // Цвет выбранной станции
 let stationTextNotActive = "#999"; // Цвет не выбраной станции
@@ -234,6 +235,7 @@ function getSelectedStation(e) {
   }
 }
 
+
 $(window).on("load", function () {
   getAllStation();
   $(".MetroMap_line_item").css("cursor", "pointer");
@@ -385,137 +387,133 @@ $(window).on("load", function () {
   );
 });
 
-$(window).on("click", function (e) {
-  if (e.target.tagName !== 'svg') {
-    getSelectedStation(e);
+let drag = false;
+let click = false;
+$(document).on('mousedown', function (e) {
+  if (e.type === 'mousedown') {
+    click = true;
   }
-});
+})
+$(document).on('mouseup', function (e) {
+  if (e.type === 'mouseup') {
+    click = false;
+  }
+})
+$(document).on('mousemove', function (e) {
+  if (e.type === 'mousemove' && click) {
+    drag = true
+  } else if (e.type === 'mousemove' && !click) {
+    drag = false
+  }
+})
 
 $(window).on('load', function() {
   const svgImage = document.querySelector(".mertro-map svg");
   const svgContainer = document.querySelector(".mertro-map");
 
-  let viewBox = {x:0,y:0,w:svgImage.clientWidth,h:svgImage.clientHeight};
-  svgImage.setAttribute('viewBox', `${viewBox.x} ${viewBox.y} ${viewBox.w} ${viewBox.h}`);
-  const svgSize = {w:svgImage.clientWidth,h:svgImage.clientHeight};
-  let isPanning = false;
-  let startPoint = {x:0,y:0};
-  let endPoint = {x:0,y:0};;
+  let viewBox = { 
+    x: 0,
+    y: 0,
+    w: svgImage.clientWidth, 
+    h: svgImage.clientHeight,
+  };
+  svgImage.setAttribute('viewBox', `${ viewBox.x } ${ viewBox.y } ${ viewBox.w } ${ viewBox.h }`);
+  const svgSize = {
+    w: svgImage.clientWidth,
+    h: svgImage.clientHeight,
+  };
+  let startPoint = { x: 0, y: 0 };
+  let endPoint = { x: 0, y: 0 };;
   let scale = 1;
 
-  svgContainer.onmousewheel = function(e) {
+  svgContainer.onmousewheel = function (e) {
     e.preventDefault();
     let w = viewBox.w;
     let h = viewBox.h;
     let mx = e.offsetX;
-    let my = e.offsetY;    
-    let dw = w*Math.sign(e.deltaY)*0.05;
-    let dh = h*Math.sign(e.deltaY)*0.05;
-    let dx = dw*mx/svgSize.w;
-    let dy = dh*my/svgSize.h;
-    viewBox = {x:viewBox.x+dx,y:viewBox.y+dy,w:viewBox.w-dw,h:viewBox.h-dh};
-    scale = svgSize.w/viewBox.w;
-    // zoomValue.innerText = `${Math.round(scale*100)/100}`;
-    svgImage.setAttribute('viewBox', `${viewBox.x} ${viewBox.y} ${viewBox.w} ${viewBox.h}`);
+    let my = e.offsetY;
+    let dw = w * Math.sign(e.deltaY) * 0.1;
+    let dh = h * Math.sign(e.deltaY) * 0.1;
+    let dx = dw * mx / svgSize.w;
+    let dy = dh * my / svgSize.h;
+    if (e.wheelDelta >= 0) {
+      if (scale >= 0.3) {
+        viewBox = { 
+          x: viewBox.x + dx,
+          y: viewBox.y + dy,
+          w: viewBox.w - dw,
+          h: viewBox.h - dh,
+        };
+        scale = svgSize.w / viewBox.w;
+        svgImage.setAttribute('viewBox', `${viewBox.x} ${viewBox.y} ${viewBox.w} ${viewBox.h}`);
+      }
+    }
+    else {
+      if (scale <= 2) {
+        viewBox = { 
+          x: viewBox.x + dx,
+          y: viewBox.y + dy,
+          w: viewBox.w - dw,
+          h: viewBox.h - dh,
+        };
+        scale = svgSize.w / viewBox.w;
+        svgImage.setAttribute('viewBox', `${viewBox.x} ${viewBox.y} ${viewBox.w} ${viewBox.h}`);
+      }
+    }
   }
 
-
-  svgContainer.onmousedown = function(e){
+  svgContainer.onmousedown = function (e) {
     isPanning = true;
-    startPoint = {x:e.x,y:e.y};   
+    startPoint = {
+      x: e.x,
+      y: e.y
+    };
   }
 
-  svgContainer.onmousemove = function(e){
-    if (isPanning){
-    endPoint = {x:e.x,y:e.y};
-    let dx = (startPoint.x - endPoint.x)/scale;
-    let dy = (startPoint.y - endPoint.y)/scale;
-    let movedViewBox = {x:viewBox.x+dx,y:viewBox.y+dy,w:viewBox.w,h:viewBox.h};
-    svgImage.setAttribute('viewBox', `${movedViewBox.x} ${movedViewBox.y} ${movedViewBox.w} ${movedViewBox.h}`);
+  svgContainer.onmousemove = function (e) {
+    if (isPanning && drag) {
+      endPoint = {
+        x: e.x,
+        y: e.y,
+      };
+      let dx = (startPoint.x - endPoint.x) / scale;
+      let dy = (startPoint.y - endPoint.y) / scale;
+      let movedViewBox = {
+        x: viewBox.x + dx,
+        y: viewBox.y + dy,
+        w: viewBox.w,
+        h: viewBox.h,
+      };
+      svgImage.setAttribute('viewBox', `${movedViewBox.x} ${movedViewBox.y} ${movedViewBox.w} ${movedViewBox.h}`);
+    }
+  }  
+
+  svgContainer.onmouseup = function (e) {
+    if (isPanning) { 
+      endPoint = {
+        x: e.x,
+        y: e.y,
+      };
+      let dx = (startPoint.x - endPoint.x) / scale;
+      let dy = (startPoint.y - endPoint.y) / scale;
+      viewBox = {
+        x: viewBox.x + dx,
+        y: viewBox.y + dy,
+        w: viewBox.w,
+        h: viewBox.h,
+      };
+      svgImage.setAttribute('viewBox', `${viewBox.x} ${viewBox.y} ${viewBox.w} ${viewBox.h}`);
+      isPanning = false;
     }
   }
 
-  svgContainer.onmouseup = function(e){
-    if (isPanning){ 
-    endPoint = {x:e.x,y:e.y};
-    let dx = (startPoint.x - endPoint.x)/scale;
-    let dy = (startPoint.y - endPoint.y)/scale;
-    viewBox = {x:viewBox.x+dx,y:viewBox.y+dy,w:viewBox.w,h:viewBox.h};
-    svgImage.setAttribute('viewBox', `${viewBox.x} ${viewBox.y} ${viewBox.w} ${viewBox.h}`);
-    isPanning = false;
-    }
-  }
-
-  svgContainer.onmouseleave = function(e){
+  svgContainer.onmouseleave = function (e) {
     isPanning = false;
   }
 })
-// $(window).on('load', function () {
-//   let map = document.querySelector(".mertro-map") || null;
-//   let svg = map.querySelector('svg') || null;
 
-//   if (map === null) return;
-//   if (svg === null) return;
-
-//   let scale = 1;
-//   let grabbing = false;
-//   let xoff = 0;
-//   let yoff = 0;
-//   let start = { x: 0, y: 0 };
-  
-//   function setTransform () {
-//     svg.style.transform = "translate(" + xoff + "px, " + yoff + "px) scale(" + scale + ")";
-//   }
-  
-//   map.onmousedown = function (e) {
-//     e.preventDefault();
-//     start = { x: e.clientX - xoff, y: e.clientY - yoff };
-//     grabbing = true;
-//   };
-  
-//   map.onmouseup = function (e) {
-//     grabbing = false;
-//   };
-  
-//   map.onmousemove = function (e) {
-//     e.preventDefault();
-//     if (!grabbing) {
-//       return;
-//     }
-//     xoff = e.clientX - start.x;
-//     yoff = e.clientY - start.y;
-//     setTransform();
-//   };
-  
-//   map.onwheel = function (e) {
-//     // e.preventDefault();
-//     // var w = viewBox.w;
-//     // var h = viewBox.h;
-//     // var mx = e.offsetX;
-//     // var my = e.offsetY;    
-//     // var dw = w*Math.sign(e.deltaY)*0.05;
-//     // var dh = h*Math.sign(e.deltaY)*0.05;
-//     // var dx = dw*mx/svgSize.w;
-//     // var dy = dh*my/svgSize.h;
-//     // viewBox = {x:viewBox.x+dx,y:viewBox.y+dy,w:viewBox.w-dw,h:viewBox.h-dh};
-//     // scale = svgSize.w/viewBox.w;
-//     // zoomValue.innerText = `${Math.round(scale*100)/100}`;
-//     // svgImage.setAttribute('viewBox', `${viewBox.x} ${viewBox.y} ${viewBox.w} ${viewBox.h}`);
-
-//     e.preventDefault();
-
-//     // take the scale into account with the offset
-//     let xs = (e.clientX - xoff) / scale;
-//     let ys = (e.clientY - yoff) / scale;
-//     let delta = e.wheelDelta ? e.wheelDelta : -e.deltaY;
-  
-//     // get scroll direction & set zoom level
-//     delta > 0 ? (scale *= 1.2) : (scale /= 1.2);
-  
-//     // reverse the offset amount with the new scale
-//     xoff = e.clientX - xs * scale;
-//     yoff = e.clientY - ys * scale;
-  
-//     setTransform();
-//   };
-// })
+$(window).on("mouseup", function (e) {
+  if (e.target.tagName !== 'svg' && drag === false) {
+    getSelectedStation(e);
+  }
+});

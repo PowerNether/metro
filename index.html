@@ -19,11 +19,11 @@
 				height: 1000px;
 				overflow: hidden;
 				position: relative;
+				user-select: none;
 			}
 			.metro .mertro-map {
-				transform-origin: 0px 0px;
-				transform: scale(1, 1);
-				transition: transfrom .35s;
+				width: 100%;
+				height: 100%;
 			}
 			.metro .mertro-map svg {
 				position: absolute;
@@ -37,6 +37,42 @@
 				width: 100%;
 				height: 100%;
 				pointer-events: none;
+			}
+			.metro .metro-controlls {
+				position: absolute;
+				top: 50%;
+				right: 20px;
+				transform: translateY(-50%);
+				pointer-events: all;
+			}
+			.metro .metro-zoomIn {
+				font-weight: bold;
+				font-size: 24px;
+				line-height: 30px;
+				padding-top: 4px;
+				box-sizing: border-box;
+				display: flex;
+				justify-content: center;
+				width: 36px;
+				height: 36px;
+				background: #FFFFFF;
+				box-shadow: 0px 0px 4px rgba(37, 36, 41, 0.04), 0px 2px 8px rgba(37, 36, 41, 0.12);
+				border-radius: 50%;
+				margin-bottom: 8px;
+				cursor: pointer;
+			}
+			.metro .metro-zoomOut {
+				font-weight: bold;
+				font-size: 24px;
+				line-height: 30px;
+				display: flex;
+				justify-content: center;
+				width: 36px;
+				height: 36px;
+				background: #FFFFFF;
+				box-shadow: 0px 0px 4px rgba(37, 36, 41, 0.04), 0px 2px 8px rgba(37, 36, 41, 0.12);
+				border-radius: 50%;
+				cursor: pointer;
 			}
 		</style>
 	</head>
@@ -2927,7 +2963,10 @@
 				</svg>
 			</div>
 			<div class="metro-overlay">
-
+				<div class="metro-controlls">
+					<div class="metro-zoomIn">+</div>
+					<div class="metro-zoomOut">-</div>
+				</div>
 			</div>
 		</div>
 		<script src="./jq.js"></script>

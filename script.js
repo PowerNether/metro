@@ -408,8 +408,13 @@ $(document).on('mousemove', function (e) {
 })
 
 $(window).on('load', function() {
-  const svgImage = document.querySelector(".mertro-map svg");
-  const svgContainer = document.querySelector(".mertro-map");
+  const svgImage = document.querySelector(".mertro-map svg") || null;
+  const svgContainer = document.querySelector(".mertro-map") || null;
+  const svgZoomIn = document.querySelector('.metro-zoomIn') || null;
+  const svgZoomOut = document.querySelector('.metro-zoomOut') || null;
+
+
+  if (svgImage === null && svgContainer === null) return
 
   let viewBox = { 
     x: 0,
@@ -472,6 +477,7 @@ $(window).on('load', function() {
 
   svgContainer.onmousemove = function (e) {
     if (isPanning && drag) {
+      svgContainer.style['cursor'] = 'grabbing'
       endPoint = {
         x: e.x,
         y: e.y,
@@ -486,10 +492,30 @@ $(window).on('load', function() {
       };
       svgImage.setAttribute('viewBox', `${movedViewBox.x} ${movedViewBox.y} ${movedViewBox.w} ${movedViewBox.h}`);
     }
-  }  
+  }
+
+  // svgContainer.onmousemove = function (e) {
+  //   if (isPanning && drag) {
+  //     svgContainer.style['cursor'] = 'grabbing'
+  //     endPoint = {
+  //       x: e.x,
+  //       y: e.y,
+  //     };
+  //     let dx = (startPoint.x - endPoint.x) / scale;
+  //     let dy = (startPoint.y - endPoint.y) / scale;
+  //     let movedViewBox = {
+  //       x: viewBox.x + dx,
+  //       y: viewBox.y + dy,
+  //       w: viewBox.w,
+  //       h: viewBox.h,
+  //     };
+  //     svgImage.setAttribute('viewBox', `${movedViewBox.x} ${movedViewBox.y} ${movedViewBox.w} ${movedViewBox.h}`);
+  //   }
+  // }  
 
   svgContainer.onmouseup = function (e) {
     if (isPanning) { 
+      svgContainer.style['cursor'] = 'default'
       endPoint = {
         x: e.x,
         y: e.y,
@@ -509,6 +535,49 @@ $(window).on('load', function() {
 
   svgContainer.onmouseleave = function (e) {
     isPanning = false;
+  }
+
+  if (svgZoomIn !== null && svgZoomOut !== null) {
+    svgZoomIn.addEventListener('click', function () {
+      let w = viewBox.w;
+      let h = viewBox.h;
+      let mx = svgContainer.getBoundingClientRect().width / 2;
+      let my = svgContainer.getBoundingClientRect().height / 2;
+      let dw = w * 1 * 0.1;
+      let dh = h * 1 * 0.1;
+      let dx = dw * mx / svgSize.w;
+      let dy = dh * my / svgSize.h;
+      if (scale <= 2) {
+        viewBox = { 
+          x: viewBox.x + dx,
+          y: viewBox.y + dy,
+          w: viewBox.w - dw,
+          h: viewBox.h - dh,
+        };
+        scale = svgSize.w / viewBox.w;
+        svgImage.setAttribute('viewBox', `${viewBox.x} ${viewBox.y} ${viewBox.w} ${viewBox.h}`);
+      }
+    })
+    svgZoomOut.addEventListener('click', function () {
+      let w = viewBox.w;
+      let h = viewBox.h;
+      let mx = svgContainer.getBoundingClientRect().width / 2;
+      let my = svgContainer.getBoundingClientRect().height / 2;
+      let dw = w * -1 * 0.1;
+      let dh = h * -1 * 0.1;
+      let dx = dw * mx / svgSize.w;
+      let dy = dh * my / svgSize.h;
+      if (scale >= 0.3) {
+        viewBox = { 
+          x: viewBox.x + dx,
+          y: viewBox.y + dy,
+          w: viewBox.w - dw,
+          h: viewBox.h - dh,
+        };
+        scale = svgSize.w / viewBox.w;
+        svgImage.setAttribute('viewBox', `${viewBox.x} ${viewBox.y} ${viewBox.w} ${viewBox.h}`);
+      }
+    })
   }
 })
 

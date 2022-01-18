@@ -6,7 +6,6 @@ window.addEventListener('load', function () {
         let selLinesId = []
         let selStationsText = [];
         let isPanning = false;
-        let somethingArray = [];
 
         let init = false;
         let drag = false;
@@ -161,7 +160,7 @@ window.addEventListener('load', function () {
         if (svgImage !== null && svgContainer !== null) {
             let startPoint = { x: 0, y: 0 };
             let endPoint = { x: 0, y: 0 };
-            let scale = 2;
+            let scale = 1.45;
             let svgContainerSize = {
                 w: svgContainer.clientWidth,
                 h: svgContainer.clientHeight,
@@ -174,8 +173,10 @@ window.addEventListener('load', function () {
             let viewBox = {
                 w: svgSize.w * scale,
                 h: svgSize.h * scale,
-                x: ((svgContainerSize.w - svgSize.w) / 2 + 352) * -1,
-                y: ((svgContainerSize.h - svgSize.h) / 2 + 582) * -1,
+                // x: ((svgContainerSize.w - svgSize.w) / 2 + 352) * -1,
+                // y: ((svgContainerSize.h - svgSize.h) / 2 + 582) * -1,
+                x: ((svgContainerSize.w - svgSize.w) / 2 + 132) * -1,
+                y: ((svgContainerSize.h - svgSize.h) / 2 + 362) * -1,
             };
 
             setTransform(viewBox)

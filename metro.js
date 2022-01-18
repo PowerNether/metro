@@ -7,9 +7,14 @@ window.addEventListener('load', function () {
         let selStationsText = [];
         let isPanning = false;
 
-        let init = false;
+        let around = false;
+        let aroundLine = false;
+        let initLine = false;
+        let initStation = false;
         let drag = false;
         let click = false;
+
+        let somethingArray = [];
 
         const svgContainer = document.querySelector('.metro__map') || null;
         const svgImage = document.querySelector('.metro__map svg') || null;
@@ -29,7 +34,7 @@ window.addEventListener('load', function () {
                             let selectLineValue = selectLine.value;
                             if (selLinesId.indexOf(id) === -1) {
                                 selectLineValue.push(id)
-                                init = true;
+                                initLine = true;
                                 selectLine.setValue(selectLineValue);
                             }
                             else {
@@ -80,12 +85,30 @@ window.addEventListener('load', function () {
             }
             if (allStations !== null) {
                 allStations.forEach(station => {
+                    let stationName = Array.from(station.querySelectorAll('text')) || null;
+                    let stationLine = station.parentNode.getAttribute('data-line');
+                    let name = getStationName(stationName);
+
+                    somethingArray.push({
+                        label: (name + `<span class="Metro-Line-Color Metro-Line-Color__${stationLine}"></span>`),
+                        value: station.getAttribute('data-metro-map-node-id'),
+                    })
+
                     station.addEventListener('click', function (event) {
                         if (drag === false) {
                             let id = event.target.getAttribute('data-metro-map-node-id') || null;
                             id === null ? id = event.target.parentNode.getAttribute('data-metro-map-node-id') || null : true
                             id === null ? id = event.target.parentNode.parentNode.getAttribute('data-metro-map-node-id') : true
-                            setSelectedStation(id)
+                            let selectStationValue = selectStation.value;
+                            if (selStationsId.indexOf(id) === -1) {
+                                selectStationValue.push(id)
+                                initStation = true;
+                                selectStation.setValue(selectStationValue);
+                            }
+                            else {
+                                selectStationValue.splice(selectStationValue.indexOf(id), 1)
+                                selectStation.setValue(selectStationValue);
+                            }
                         }
                     })
                     station.addEventListener('mouseenter', function (event) {
@@ -110,6 +133,15 @@ window.addEventListener('load', function () {
                             })
                         }
                     })
+                })
+                somethingArray.sort(function (a, b) {
+                    let nameA=a.label.toLowerCase()
+                    let nameB=b.label.toLowerCase()
+                    if (nameA < nameB)
+                        return -1
+                    if (nameA > nameB)
+                        return 1
+                    return 0
                 })
             }
             if (allStops !== null) {
@@ -152,6 +184,7 @@ window.addEventListener('load', function () {
                 })
             }
         }
+
 
         // Перемещение и приближение
         const svgZoomIn = document.querySelector('.metro__zoomIn') || null;
@@ -209,7 +242,6 @@ window.addEventListener('load', function () {
             svgContainer.addEventListener('mouseup', function (event) {
                 click = false;
                 if (isPanning) {
-                    svgContainer.style['cursor'] = 'default';
                     endPoint = {
                         x: event.x,
                         y: event.y,
@@ -241,7 +273,6 @@ window.addEventListener('load', function () {
                 }
 
                 if (isPanning && drag) {
-                    svgContainer.style['cursor'] = 'grabbing';
                     endPoint = {
                         x: event.x,
                         y: event.y,
@@ -255,19 +286,6 @@ window.addEventListener('load', function () {
                         h: viewBox.h,
                     };
                     setTransform(movedViewBox);
-                }
-            }
-
-            // Фикс для обработчиков, с большим потоком данных
-            function throttled (delay, fn) {
-                let lastCall = 0;
-                return function (...args) {
-                    const now = (new Date).getTime();
-                    if (now - lastCall < delay) {
-                        return;
-                    }
-                    lastCall = now;
-                    return fn(...args)
                 }
             }
 
@@ -311,6 +329,45 @@ window.addEventListener('load', function () {
             }
         }
 
+        // Поле выбора станции
+        let selectStation = metro.querySelector('.select-metro__station') || null;
+        if (selectStation !== null) {
+            VirtualSelect.init({
+                ele: '.select-metro__station',
+                search: true,
+                multiple: true,
+                disableSelectAll: true,
+                placeholder: 'Выбрать станцию',
+                noSearchResultsText: 'Ничего не найдено',
+                searchPlaceholderText: 'Поиск',
+                optionsSelectedText: 'станций выбрано',
+                optionSelectedText: 'станция выбрана',
+                allOptionsSelectedText: 'Выбраны все станции',
+                silentInitialValueSet: true,
+                options: somethingArray,
+            });
+            watcher(selectStation.value, setSelectedStation)
+
+            selectStation.addEventListener('change', function () {
+                if (!initStation) {
+                    setSelectedStation(selectStation.value[0])
+                    initStation = true
+                }
+                watcher(selectStation.value, setSelectedStation)
+            })
+            selectStation.addEventListener('reset', function () {
+                let ids = [];
+                selStationsId.forEach(id => {
+                    ids.push(id)
+                })
+                ids.forEach(id => {
+                    around = true
+                    setSelectedStation(id);
+                })
+                around = false
+                selectLine.reset()
+            })
+        }
         // Поле выбора линии
         let selectLine = metro.querySelector('.select-metro__line') || null;
         if (selectLine !== null) {
@@ -322,7 +379,7 @@ window.addEventListener('load', function () {
                 placeholder: 'Выбрать линию',
                 noSearchResultsText: 'Ничего не найдено',
                 searchPlaceholderText: 'Поиск',
-                optionsSelectedText: 'линии выбрано',
+                optionsSelectedText: 'линий выбрано',
                 optionSelectedText: 'линия выбрана',
                 allOptionsSelectedText: 'Выбраны все линии',
                 silentInitialValueSet: true,
@@ -347,27 +404,28 @@ window.addEventListener('load', function () {
                     { label: 'МЦД-2', value: '618' },
                 ],
             });
-            watcher(selectLine.value)
+            watcher(selectLine.value, setSelectedStationsFromLine)
 
             selectLine.addEventListener('change', function () {
-                if (!init) {
+                if (!initLine) {
                     setSelectedStationsFromLine(selectLine.value[0])
-                    init = true
+                    initLine = true
                 }
-                watcher(selectLine.value)
+                watcher(selectLine.value, setSelectedStationsFromLine)
             })
-            selectLine.addEventListener('reset', reset)
+            selectLine.addEventListener('reset', function () {
+                let ids = [];
+                selLinesId.forEach(id => {
+                    ids.push(id)
+                })
+                ids.forEach(id => {
+                    aroundLine = true
+                    setSelectedStationsFromLine(id);
+                })
+                aroundLine = false
+            })
         }
 
-        function reset () {
-            let ids = [];
-            selLinesId.forEach(id => {
-                ids.push(id)
-            })
-            ids.forEach(id => {
-                setSelectedStationsFromLine(id);
-            })
-        }
         // Получение названия
         function getStationName(stationNameText) {
             let text = '';
@@ -387,31 +445,13 @@ window.addEventListener('load', function () {
         }
 
         // Отслеживание изменений массива
-        function watcher (arr) {
-            arr.concat = function () {
-                console.log('concat');
-                return Array.prototype.concat.apply(this, arguments)
-            }
-            arr.slice = function () {
-                console.log('slice');
-                return Array.prototype.slice.apply(this, arguments)
-            }
-            arr.shift = function () {
-                console.log('shift');
-                return Array.prototype.shift.apply(this, arguments)
-            }
-            arr.unshift = function () {
-                console.log('unshift');
-                return Array.prototype.unshift.apply(this, arguments)
-            }
+        function watcher (arr, fn) {
             arr.push = function () {
-                console.log('push');
-                setSelectedStationsFromLine(arguments[0])
+                fn(arguments[0])
                 return Array.prototype.push.apply(this, arguments);
             }
             arr.splice = function () {
-                console.log('splice');
-                setSelectedStationsFromLine(arr[arguments[0]])
+                fn(arr[arguments[0]])
                 return Array.prototype.splice.apply(this, arguments);
             }
         }
@@ -436,11 +476,13 @@ window.addEventListener('load', function () {
                             stop.classList.remove('MetroMap_stop-active')
                         })
                     }
-                    if (selStationsText.indexOf(name) !== -1) {
-                        selStationsText.splice(selStationsText.indexOf(name), 1);
-                    }
 
-                    selStationsId.splice(selStationsId.indexOf(id), 1)
+                    if (!around) {
+                        if (selStationsText.indexOf(name) !== -1) {
+                            selStationsText.splice(selStationsText.indexOf(name), 1);
+                        }
+                        selStationsId.splice(selStationsId.indexOf(id), 1)
+                    }
                 }
                 else {
 
@@ -453,13 +495,17 @@ window.addEventListener('load', function () {
                             stop.classList.add('MetroMap_stop-active')
                         })
                     }
-                    if (selStationsText.indexOf(name) === -1) {
-                        selStationsText.push(name);
+                    if (!around) {
+                        if (selStationsText.indexOf(name) === -1) {
+                            selStationsText.push(name);
+                        }
+                        selStationsId.push(id)
                     }
-                    selStationsId.push(id)
                 }
             }
-            console.log(selStationsText, selLinesId, selStationsId)
+            if (!around) {
+                console.log(selStationsText, selLinesId, selStationsId)
+            }
         }
         // Выбор линии
         function setSelectedStationsFromLine (id) {
@@ -491,6 +537,13 @@ window.addEventListener('load', function () {
                             })
                         }
                         if (selStationsId.indexOf(String(stationId)) !== -1) {
+                            let selectStationValue = selectStation.value;
+                            if (selStationsId.indexOf(String(stationId)) !== -1) {
+                                around = true
+                                selectStationValue.splice(selectStationValue.indexOf(String(stationId)), 1)
+                                initStation = true;
+                                selectStation.setValue(selectStationValue);
+                            }
                             selStationsId.splice(selStationsId.indexOf(String(stationId)), 1)
                         }
                         if (selStationsText.indexOf(name) !== -1) {
@@ -500,6 +553,7 @@ window.addEventListener('load', function () {
                 }
 
                 selLinesId.splice(selLinesId.indexOf(id), 1);
+                around = false;
             }
             else {
                 if (lineLabels !== null) {
@@ -523,17 +577,40 @@ window.addEventListener('load', function () {
                                 stop.classList.add('MetroMap_stop-active')
                             })
                         }
-                        if (selStationsId.indexOf(String(stationId)) === -1) {
-                            selStationsId.push(String(stationId))
-                        }
                         if (selStationsText.indexOf(name) === -1) {
+                            if (selStationsId.indexOf(String(stationId)) === -1) {
+                                let selectStationValue = selectStation.value;
+                                if (selStationsId.indexOf(String(stationId)) === -1) {
+                                    around = true
+                                    selectStationValue.push(String(stationId))
+                                    initStation = true;
+                                    selectStation.setValue(selectStationValue);
+                                }
+                                selStationsId.push(String(stationId))
+                            }
                             selStationsText.push(name);
                         }
                     })
                 }
                 selLinesId.push(id);
+                around = false;
             }
-            console.log(selStationsText, selLinesId, selStationsId)
+            if (!aroundLine) {
+                console.log(selStationsText, selLinesId, selStationsId)
+            }
+        }
+
+        // Фикс для обработчиков, с большим потоком данных
+        function throttled (delay, fn) {
+            let lastCall = 0;
+            return function (...args) {
+                const now = (new Date).getTime();
+                if (now - lastCall < delay) {
+                    return;
+                }
+                lastCall = now;
+                return fn(...args)
+            }
         }
     }
 });

@@ -39,33 +39,40 @@
         pointer-events: none;
       }
       .metro .metro__form {
+        display: flex;
+        width: 100%;
         position: absolute;
         top: 20px;
         left: 20px;
-        width: 100%;
       }
       .metro .metro__select {
         pointer-events: all;
-      }
-      .metro .select-metro__line {
+        width: 100%;
         max-width: 350px;
       }
-      .metro .select-metro__line .vscomp-toggle-button {
-        padding: 14px 12px;
+      .metro .select-metro {
+        width: 100%;
+        max-width: 100%;
+      }
+      .metro .metro__select + .metro__select {
+        margin-left: 16px;
+      }
+      .metro .select-metro .vscomp-toggle-button {
+        padding: 14px 30px 14px 12px;
         height: 46px;
         border: 1px solid #cccccc;
         box-sizing: border-box;
         box-shadow: 0 4px 16px rgba(37, 36, 41, 0.24);
         border-radius: 4px;
       }
-      .metro .select-metro__line .vscomp-value {
+      .metro .select-metro .vscomp-value {
         font-size: 15px;
         line-height: 18px;
         color: #333333;
         height: auto;
         opacity: 1;
       }
-      .metro .select-metro__line .vscomp-arrow {
+      .metro .select-metro .vscomp-arrow {
         top: 50%;
         right: 12px;
         transform: translateY(-50%);
@@ -76,23 +83,23 @@
         background: #b3b3b3;
         transition: transform 0.35s;
       }
-      .metro .select-metro__line .vscomp-option {
+      .metro .select-metro .vscomp-option {
         padding: 0 12px;
         flex-wrap: nowrap;
       }
-      .metro .select-metro__line .vscomp-option.focused {
+      .metro .select-metro .vscomp-option.focused {
         background: #f7f6fb;
       }
-      .metro .select-metro__line .vscomp-option.selected {
+      .metro .select-metro .vscomp-option.selected {
         background: #f7f6fb;
       }
-      .metro .select-metro__line .checkbox-icon {
+      .metro .select-metro .checkbox-icon {
         width: 16px;
         height: 16px;
         margin-right: 0;
         order: 1;
       }
-      .metro .select-metro__line .checkbox-icon::before {
+      .metro .select-metro .checkbox-icon::before {
         content: "";
         width: 16px;
         height: 16px;
@@ -104,7 +111,7 @@
         mask: url("images/selectArrow.svg") center / cover no-repeat;
         background: #ffffff;
       }
-      .metro .select-metro__line .checkbox-icon::after {
+      .metro .select-metro .checkbox-icon::after {
         width: 16px;
         height: 16px;
         border: 1px solid #cccccc;
@@ -113,10 +120,14 @@
         box-sizing: border-box;
         transition: background 0.35s, border 0.35s;
       }
-      .metro .select-metro__line .vscomp-option.selected .checkbox-icon::before {
+      .metro .select-metro .vscomp-option .vscomp-option-text {
+        display: flex;
+        align-items: center;
+      }
+      .metro .select-metro .vscomp-option.selected .checkbox-icon::before {
         opacity: 1;
       }
-      .metro .select-metro__line .vscomp-option.selected .checkbox-icon::after {
+      .metro .select-metro .vscomp-option.selected .checkbox-icon::after {
         width: 16px;
         height: 16px;
         border: 1px solid #5947b3;
@@ -124,14 +135,14 @@
         background: #5947b3;
         transform: none;
       }
-      .metro .select-metro__line .vscomp-dropbox-container {
+      .metro .select-metro .vscomp-dropbox-container {
         border: 1px solid #cccccc;
         box-sizing: border-box;
         box-shadow: 0 4px 16px rgba(37, 36, 41, 0.24);
         border-radius: 4px;
         overflow: hidden;
       }
-      .metro .select-metro__line.pop-comp-active .vscomp-arrow {
+      .metro .select-metro.pop-comp-active .vscomp-arrow {
         transform: translateY(-50%) rotate(180deg);
       }
       .metro .metro__controlls {
@@ -191,7 +202,68 @@
 		overflow: hidden;
 		transition: height .35s;
 	  }
-      /* Базовые */
+      .metro .Metro-Line-Color {
+        display: inline-block;
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        margin-right: 8px;
+        order: -1;
+      }
+      .metro .Metro-Line-Color__618 {
+        background: #DF477C;
+      }
+      .metro .Metro-Line-Color__619 {
+        background: #FF66E8;
+      }
+      .metro .Metro-Line-Color__620 {
+        background: #ED9F2D;
+      }
+      .metro .Metro-Line-Color__621 {
+        background: #FFA8AF;
+      }
+      .metro .Metro-Line-Color__622 {
+        background: #909090;
+      }
+      .metro .Metro-Line-Color__623 {
+        background: #FFE400;
+      }
+      .metro .Metro-Line-Color__624 {
+        background: #6FC1BA;
+      }
+      .metro .Metro-Line-Color__625 {
+        background: #B1179A;
+      }
+      .metro .Metro-Line-Color__626 {
+        background: #69CD37;
+      }
+      .metro .Metro-Line-Color__627 {
+        background: #6FC1BA;
+      }
+      .metro .Metro-Line-Color__628 {
+        background: #FFE400;
+      }
+      .metro .Metro-Line-Color__629 {
+        background: #4F8242;
+      }
+      .metro .Metro-Line-Color__630 {
+        background: #8DBECE;
+      }
+      .metro .Metro-Line-Color__631 {
+        background: #FF8103;
+      }
+      .metro .Metro-Line-Color__632 {
+        background: #E4402D;
+      }
+      .metro .Metro-Line-Color__633 {
+        background: #0042A5;
+      }
+      .metro .Metro-Line-Color__634 {
+        background: #099DD4;
+      }
+      .metro .Metro-Line-Color__635 {
+        background: #794835;
+      }
       .metro .MetroMap_line_item .MetroMap_label .MetroMap_text {
         pointer-events: none;
       }
@@ -212,23 +284,22 @@
         stroke: #FFFFFF;
         transition: stroke .35s;
       }
-      /* Наведение */
-      .metro .MetroMap_line_item .MetroMap_label.MetroMap_label-active .MetroMap_circle,
-      .metro .MetroMap_line_item .MetroMap_label.MetroMap_label-hover .MetroMap_circle {
-        stroke: #5947B3;
-      }
-      .metro .MetroMap_station_item.MetroMap_station_item-active .text,
       .metro .MetroMap_station_item.MetroMap_station_item-hover .text {
-        fill: #FFFFFF;
-      }
-      .metro .MetroMap_station_item.MetroMap_station_item-active .MetroMap_bg,
-      .metro .MetroMap_station_item.MetroMap_station_item-hover .MetroMap_bg {
         fill: #5947B3;
-        opacity: 1;
       }
       .metro .MetroMap_stop.MetroMap_stop-active .MetroMap_circle,
       .metro .MetroMap_stop.MetroMap_stop-hover .MetroMap_circle {
         stroke: #5947B3;
+      }
+      .metro .MetroMap_line_item .MetroMap_label.MetroMap_label-active .MetroMap_circle {
+        stroke: #5947B3;
+      }
+      .metro .MetroMap_station_item.MetroMap_station_item-active .text {
+        fill: #FFFFFF;
+      }
+      .metro .MetroMap_station_item.MetroMap_station_item-active .MetroMap_bg {
+        fill: #5947B3;
+        opacity: 1;
       }
     </style>
   </head>
@@ -1078,7 +1149,7 @@
                 <g class="MetroMap_station_item" id="MetroMap_station_235" transform="translate(944 1220)" data-metro-map-node-id="60">
                   <path d="M2 0h120a2 2 0 0 1 2 2v18a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V2a2 2 0 0 1 2-2z" class="MetroMap_bg1" id="MetroMap_" fill-opacity=".8" fill="#FFF"></path>
                   <rect class="MetroMap_bg" id="MetroMap_" fill=" " fill-rule="nonzero" opacity="0" width="124" height="22" rx="2"></rect>
-                  <text class="text"><tspan x="6" y="16">Автозаводская</tspan></text>
+                  <text class="text"><tspan x="6" y="16">Автозаводская 14</tspan></text>
                 </g>
                 <g class="MetroMap_station_item" id="MetroMap_station_244" transform="translate(809 1219)" data-metro-map-node-id="61">
                   <rect class="MetroMap_bg" id="MetroMap_" fill=" " fill-rule="nonzero" opacity="0" width="42" height="22" rx="2"></rect>
@@ -1925,7 +1996,7 @@
                 </g>
                 <g class="MetroMap_station_item" id="MetroMap_station_128" transform="translate(583 1352)" data-metro-map-node-id="247">
                   <rect class="MetroMap_bg" id="MetroMap_" fill=" " fill-rule="nonzero" opacity="0" width="120" height="22" rx="2"></rect>
-                  <text class="text"><tspan x="3" y="16">Автозаводская</tspan></text>
+                  <text class="text"><tspan x="3" y="16">Автозаводская 2</tspan></text>
                 </g>
                 <g class="MetroMap_transit MetroMap_station_item" id="MetroMap_station_129" transform="translate(583 1164)" data-metro-map-node-id="248">
                   <rect class="MetroMap_bg" id="MetroMap_" fill=" " fill-rule="nonzero" opacity="0" width="95" height="22" rx="2"></rect>
@@ -3168,8 +3239,11 @@
       </div>
       <div class="metro__overlay">
         <div class="metro__form">
-          <div class="metro__select select-metro">
-            <div class="select-metro__line"></div>
+          <div class="metro__select">
+            <div class="select-metro select-metro__line"></div>
+          </div>
+          <div class="metro__select">
+            <div class="select-metro select-metro__station"></div>
           </div>
         </div>
         <div class="metro__controlls">

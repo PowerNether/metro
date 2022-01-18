@@ -230,7 +230,7 @@ window.addEventListener('load', function () {
                     }
                 }
             }, {passive: false})
-            // svgContainer.addEventListener('mousedown, touchstart', function (event) {
+            // svgContainer.addEventListener('mousedown', function (event) {
             //     click = true;
             //     isPanning = true;
             //     startPoint = {
@@ -238,7 +238,7 @@ window.addEventListener('load', function () {
             //         y: event.y,
             //     };
             // })
-            // svgContainer.addEventListener('mouseup, touchend', function (event) {
+            // svgContainer.addEventListener('mouseup', function (event) {
             //     click = false;
             //     if (isPanning) {
             //         endPoint = {
@@ -257,12 +257,12 @@ window.addEventListener('load', function () {
             //         isPanning = false
             //     }
             // })
-            svgContainer.addEventListener('mousedown', mtDown(event))
-            svgContainer.addEventListener('touchstart', mtDown(event))
+            svgContainer.addEventListener('mousedown', mtDown)
+            svgContainer.addEventListener('touchstart', mtDown)
             svgContainer.addEventListener('mousemove', throttled(20, moveMap))
             svgContainer.addEventListener('touchmove', throttled(20, moveMap))
-            svgContainer.addEventListener('mouseup', mtUp(event))
-            svgContainer.addEventListener('touchend', mtUp(event))
+            svgContainer.addEventListener('mouseup', mtUp)
+            svgContainer.addEventListener('touchend', mtUp)
             svgContainer.addEventListener('mouseleave',function (event) {
                 svgContainer.style['cursor'] = 'default';
                 isPanning = false;

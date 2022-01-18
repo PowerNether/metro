@@ -273,28 +273,56 @@ window.addEventListener('load', function () {
             function mtDown (event) {
                 click = true;
                 isPanning = true;
-                startPoint = {
-                    x: event.x,
-                    y: event.y,
-                };
-            }
-            function mtUp (event) {
-                click = false;
-                if (isPanning) {
-                    endPoint = {
+                if (event.type === 'touchstart') {
+                    startPoint = {
+                        x: event.touches[0].pageX,
+                        y: event.touches[0].pageY,
+                    };
+                }
+                else {
+                    startPoint = {
                         x: event.x,
                         y: event.y,
                     };
-                    let dx = (startPoint.x - endPoint.x) / scale;
-                    let dy = (startPoint.y - endPoint.y) / scale;
-                    viewBox = {
-                        x: viewBox.x + dx,
-                        y: viewBox.y + dy,
-                        w: viewBox.w,
-                        h: viewBox.h,
-                    };
-                    setTransform(viewBox);
-                    isPanning = false
+                }
+            }
+            function mtUp (event) {
+                click = false;
+                if (event.type === 'touchend') {
+                    if (isPanning) {
+                        endPoint = {
+                            x: event.changedTouches[0].pageX,
+                            y: event.changedTouches[0].pageY,
+                        };
+                        let dx = (startPoint.x - endPoint.x) / scale;
+                        let dy = (startPoint.y - endPoint.y) / scale;
+                        viewBox = {
+                            x: viewBox.x + dx,
+                            y: viewBox.y + dy,
+                            w: viewBox.w,
+                            h: viewBox.h,
+                        };
+                        setTransform(viewBox);
+                        isPanning = false
+                    }
+                }
+                else {
+                    if (isPanning) {
+                        endPoint = {
+                            x: event.x,
+                            y: event.y,
+                        };
+                        let dx = (startPoint.x - endPoint.x) / scale;
+                        let dy = (startPoint.y - endPoint.y) / scale;
+                        viewBox = {
+                            x: viewBox.x + dx,
+                            y: viewBox.y + dy,
+                            w: viewBox.w,
+                            h: viewBox.h,
+                        };
+                        setTransform(viewBox);
+                        isPanning = false
+                    }
                 }
             }
 
@@ -306,21 +334,39 @@ window.addEventListener('load', function () {
                 else if (!click) {
                     drag = false;
                 }
-
-                if (isPanning && drag) {
-                    endPoint = {
-                        x: event.x,
-                        y: event.y,
-                    };
-                    let dx = (startPoint.x - endPoint.x) / scale;
-                    let dy = (startPoint.y - endPoint.y) / scale;
-                    let movedViewBox = {
-                        x: viewBox.x + dx,
-                        y: viewBox.y + dy,
-                        w: viewBox.w,
-                        h: viewBox.h,
-                    };
-                    setTransform(movedViewBox);
+                if (event.type === 'touchmove') {
+                    if (isPanning && drag) {
+                        endPoint = {
+                            x: event.touches[0].pageX,
+                            y: event.touches[0].pageY,
+                        };
+                        let dx = (startPoint.x - endPoint.x) / scale;
+                        let dy = (startPoint.y - endPoint.y) / scale;
+                        let movedViewBox = {
+                            x: viewBox.x + dx,
+                            y: viewBox.y + dy,
+                            w: viewBox.w,
+                            h: viewBox.h,
+                        };
+                        setTransform(movedViewBox);
+                    }
+                }
+                else  {
+                    if (isPanning && drag) {
+                        endPoint = {
+                            x: event.x,
+                            y: event.y,
+                        };
+                        let dx = (startPoint.x - endPoint.x) / scale;
+                        let dy = (startPoint.y - endPoint.y) / scale;
+                        let movedViewBox = {
+                            x: viewBox.x + dx,
+                            y: viewBox.y + dy,
+                            w: viewBox.w,
+                            h: viewBox.h,
+                        };
+                        setTransform(movedViewBox);
+                    }
                 }
             }
 

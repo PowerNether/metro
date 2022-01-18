@@ -230,16 +230,55 @@ window.addEventListener('load', function () {
                     }
                 }
             }, {passive: false})
-            svgContainer.addEventListener('mousedown', function (event) {
+            // svgContainer.addEventListener('mousedown, touchstart', function (event) {
+            //     click = true;
+            //     isPanning = true;
+            //     startPoint = {
+            //         x: event.x,
+            //         y: event.y,
+            //     };
+            // })
+            // svgContainer.addEventListener('mouseup, touchend', function (event) {
+            //     click = false;
+            //     if (isPanning) {
+            //         endPoint = {
+            //             x: event.x,
+            //             y: event.y,
+            //         };
+            //         let dx = (startPoint.x - endPoint.x) / scale;
+            //         let dy = (startPoint.y - endPoint.y) / scale;
+            //         viewBox = {
+            //             x: viewBox.x + dx,
+            //             y: viewBox.y + dy,
+            //             w: viewBox.w,
+            //             h: viewBox.h,
+            //         };
+            //         setTransform(viewBox);
+            //         isPanning = false
+            //     }
+            // })
+            svgContainer.addEventListener('mousedown', mtDown(event))
+            svgContainer.addEventListener('touchstart', mtDown(event))
+            svgContainer.addEventListener('mousemove', throttled(20, moveMap))
+            svgContainer.addEventListener('touchmove', throttled(20, moveMap))
+            svgContainer.addEventListener('mouseup', mtUp(event))
+            svgContainer.addEventListener('touchend', mtUp(event))
+            svgContainer.addEventListener('mouseleave',function (event) {
+                svgContainer.style['cursor'] = 'default';
+                isPanning = false;
+            })
+
+
+
+            function mtDown (event) {
                 click = true;
                 isPanning = true;
                 startPoint = {
                     x: event.x,
                     y: event.y,
                 };
-            })
-            svgContainer.addEventListener('mousemove', throttled(20, moveMap))
-            svgContainer.addEventListener('mouseup', function (event) {
+            }
+            function mtUp (event) {
                 click = false;
                 if (isPanning) {
                     endPoint = {
@@ -257,11 +296,7 @@ window.addEventListener('load', function () {
                     setTransform(viewBox);
                     isPanning = false
                 }
-            })
-            svgContainer.addEventListener('mouseleave',function (event) {
-                svgContainer.style['cursor'] = 'default';
-                isPanning = false;
-            })
+            }
 
             // Функция перемещения карты
             function moveMap (event) {

@@ -11,9 +11,9 @@
         align-items: center;
         justify-content: center;
       }
-      .text {
-        fill: #999;
-      }
+      /*.text {*/
+      /*  fill: #999;*/
+      /*}*/
       .metro {
         width: 800px;
         height: 800px;
@@ -55,7 +55,7 @@
         height: 46px;
         border: 1px solid #cccccc;
         box-sizing: border-box;
-        box-shadow: 0px 4px 16px rgba(37, 36, 41, 0.24);
+        box-shadow: 0 4px 16px rgba(37, 36, 41, 0.24);
         border-radius: 4px;
       }
       .metro .select-metro__line .vscomp-value {
@@ -127,7 +127,7 @@
       .metro .select-metro__line .vscomp-dropbox-container {
         border: 1px solid #cccccc;
         box-sizing: border-box;
-        box-shadow: 0px 4px 16px rgba(37, 36, 41, 0.24);
+        box-shadow: 0 4px 16px rgba(37, 36, 41, 0.24);
         border-radius: 4px;
         overflow: hidden;
       }
@@ -152,7 +152,7 @@
         width: 36px;
         height: 36px;
         background: #ffffff;
-        box-shadow: 0px 0px 4px rgba(37, 36, 41, 0.04), 0px 2px 8px rgba(37, 36, 41, 0.12);
+        box-shadow: 0 0 4px rgba(37, 36, 41, 0.04), 0px 2px 8px rgba(37, 36, 41, 0.12);
         border-radius: 50%;
         margin-bottom: 8px;
         cursor: pointer;
@@ -166,7 +166,7 @@
         width: 36px;
         height: 36px;
         background: #ffffff;
-        box-shadow: 0px 0px 4px rgba(37, 36, 41, 0.04), 0px 2px 8px rgba(37, 36, 41, 0.12);
+        box-shadow: 0 0 4px rgba(37, 36, 41, 0.04), 0px 2px 8px rgba(37, 36, 41, 0.12);
         border-radius: 50%;
         cursor: pointer;
       }
@@ -191,6 +191,45 @@
 		overflow: hidden;
 		transition: height .35s;
 	  }
+      /* Базовые */
+      .metro .MetroMap_line_item .MetroMap_label .MetroMap_text {
+        pointer-events: none;
+      }
+      .metro .MetroMap_line_item .MetroMap_label .MetroMap_circle {
+        stroke: #FFFFFF;
+        transition: stroke .35s;
+      }
+      .metro .MetroMap_station_item .text {
+        fill: #000000;
+        transition: fill .35s;
+      }
+      .metro .MetroMap_station_item .MetroMap_bg {
+        fill: #FFFFFF;
+        opacity: 0;
+        transition: opacity .35s, fill .35s;
+      }
+      .metro .MetroMap_stop .MetroMap_circle {
+        stroke: #FFFFFF;
+        transition: stroke .35s;
+      }
+      /* Наведение */
+      .metro .MetroMap_line_item .MetroMap_label.MetroMap_label-active .MetroMap_circle,
+      .metro .MetroMap_line_item .MetroMap_label.MetroMap_label-hover .MetroMap_circle {
+        stroke: #5947B3;
+      }
+      .metro .MetroMap_station_item.MetroMap_station_item-active .text,
+      .metro .MetroMap_station_item.MetroMap_station_item-hover .text {
+        fill: #FFFFFF;
+      }
+      .metro .MetroMap_station_item.MetroMap_station_item-active .MetroMap_bg,
+      .metro .MetroMap_station_item.MetroMap_station_item-hover .MetroMap_bg {
+        fill: #5947B3;
+        opacity: 1;
+      }
+      .metro .MetroMap_stop.MetroMap_stop-active .MetroMap_circle,
+      .metro .MetroMap_stop.MetroMap_stop-hover .MetroMap_circle {
+        stroke: #5947B3;
+      }
     </style>
   </head>
   <body cz-shortcut-listen="true">

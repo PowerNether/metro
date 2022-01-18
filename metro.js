@@ -1,337 +1,538 @@
-let metro = document.querySelector('.metro') || null;
+window.addEventListener('load', function () {
+    let metro = document.querySelector('.metro') || null;
 
-if (metro !== null) {
-    let stationTextActive = '#fff'; // Цвет выбранной станции
-    let stationTextNotActive = '#999'; // Цвет не выбраной станции
-    let stationTextHover = '#5947B3';
-    let stationBgActive = '#5947B3'; // Цвет задника выбранной станции
-    let stationBgNotActive = '#FFF'; // Цвет задника не выбраной станции
-    let stationMarkerActive = '#5947B3'; // Цвет маркера при выбранной станции
-    let stationMarkerNotActive = '#fff'; // Цвет маркера при выбранной станции
-    let lineLableTextActive = '900'; // Жирность текста выбраной линии метро
-    let lineLableTextNotActive = '400'; // Жирность текста не выбранной линии метро
-    let transitionSpeed = '0.35s'; // Скорость анимаций
-    let selStationsId = [];
-    let selLinesId = []
-    let selStationsText = [];
-    let previousSelLinesId = [];
-
-    const svgContainer = document.querySelector('.metro__map') || null;
-    const svgImage = document.querySelector('.metro__map svg') || null;
-
-    // Выбор станции/линии
-    if (svgImage !== null && svgContainer !== null) {
-        let allLines = svgImage.querySelectorAll('#MetroMap_lines .MetroMap_line_item')
-        let allStationsGroup = svgImage.querySelectorAll('#MetroMap_stations .MetroMap_stations_group')
-        let allTransits = svgImage.querySelectorAll('#MetroMap_stations #MetroMap_transit .MetroMap_transit_bg')
-        let allStops = svgImage.querySelectorAll('#MetroMap_stops .MetroMap_stop')
-
-        Array.from(allLines).forEach(line => {
-            line.addEventListener('click', function (event) {
-                let id = event.target.parentNode.parentNode.getAttribute('data-metro-map-node-id')
-                setSelectedStationsFromLine(id);
-            })
-        })
-    }
-
-    // Перемещение и приближение
-    const svgZoomIn = document.querySelector('.metro__zoomIn') || null;
-    const svgZoomOut = document.querySelector('.metro__zoomOut') || null;
-
-    if (svgImage !== null && svgContainer !== null) {
-        let startPoint = { x: 0, y: 0 };
-        let endPoint = { x: 0, y: 0 };
-        let scale = 2;
-        let svgContainerSize = {
-            w: svgContainer.clientWidth,
-            h: svgContainer.clientHeight,
-        };
-        let svgSize = {
-            w: svgImage.clientWidth,
-            h: svgImage.clientHeight,
-        };
-        // TODO: Сделать формулу с учетом scale
-        let viewBox = {
-            w: svgSize.w * scale,
-            h: svgSize.h * scale,
-            x: ((svgContainerSize.w - svgSize.w) / 2 + 352) * -1,
-            y: ((svgContainerSize.h - svgSize.h) / 2 + 582) * -1,
-        };
+    if (metro !== null) {
+        let selStationsId = [];
+        let selLinesId = []
+        let selStationsText = [];
         let isPanning = false;
+        let somethingArray = [];
 
-        setTransform(viewBox)
-        // Пересчет scale для нормальной работы передвижения по карте
-        scale = svgSize.w / viewBox.w;
+        let init = false;
+        let drag = false;
+        let click = false;
 
-        svgContainer.addEventListener('mousewheel', function (event) {
-            event.preventDefault();
-            if (event.wheelDelta >= 0) {
-                if (scale >= 0.3) {
-                    calculateZoom(-1, false, event)
-                }
-            } else {
-                if (scale <= 2) {
-                    calculateZoom(1, false, event)
-                }
+        const svgContainer = document.querySelector('.metro__map') || null;
+        const svgImage = document.querySelector('.metro__map svg') || null;
+
+        // Выбор станции/линии
+        if (svgImage !== null && svgContainer !== null) {
+            let allLines = Array.from(svgImage.querySelectorAll('#MetroMap_lines .MetroMap_line_item')) || null;
+            let allStations = Array.from(svgImage.querySelectorAll('#MetroMap_stations .MetroMap_stations_group .MetroMap_station_item')) || null;
+            let allTransits = svgImage.querySelectorAll('#MetroMap_stations #MetroMap_transit .MetroMap_transit_bg')
+            let allStops = svgImage.querySelectorAll('#MetroMap_stops .MetroMap_stop')
+
+            if (allLines !== null) {
+                allLines.forEach(line => {
+                    line.addEventListener('click', function (event) {
+                        if (drag === false) {
+                            let id = event.target.parentNode.parentNode.getAttribute('data-metro-map-node-id')
+                            let selectLineValue = selectLine.value;
+                            if (selLinesId.indexOf(id) === -1) {
+                                selectLineValue.push(id)
+                                init = true;
+                                selectLine.setValue(selectLineValue);
+                            }
+                            else {
+                                selectLineValue.splice(selectLineValue.indexOf(id), 1)
+                                selectLine.setValue(selectLineValue);
+                            }
+                        }
+                    })
+                    line.addEventListener('mouseenter', function (event) {
+                        let id = event.target.getAttribute('data-metro-map-node-id')
+                        let labels = Array.from(event.target.querySelectorAll('.MetroMap_label')) || null;
+                        let lineStations = Array.from(svgImage.querySelectorAll(`#MetroMap_stations .MetroMap_stations_group[data-line='${id}'] .MetroMap_station_item`)) || null;
+                        labels.forEach(label => {
+                            label.classList.add('MetroMap_label-hover')
+                        })
+                        lineStations.forEach(station => {
+                            let stationId = Number(station.getAttribute('data-metro-map-node-id'));
+                            let stationStops = Array.from(svgImage.querySelectorAll(`#MetroMap_stops .MetroMap_stop[data-station='${stationId}']`)) || null;
+
+                            station.classList.add('MetroMap_station_item-hover')
+                            if (stationStops !== null) {
+                                stationStops.forEach(stop => {
+                                    stop.classList.add('MetroMap_stop-hover')
+                                })
+                            }
+                        })
+                    })
+                    line.addEventListener('mouseleave', function (event) {
+                        let id = event.target.getAttribute('data-metro-map-node-id')
+                        let labels = Array.from(event.target.querySelectorAll('.MetroMap_label')) || null;
+                        let lineStations = Array.from(svgImage.querySelectorAll(`#MetroMap_stations .MetroMap_stations_group[data-line='${id}'] .MetroMap_station_item`)) || null;
+                        labels.forEach(label => {
+                            label.classList.remove('MetroMap_label-hover')
+                        })
+                        lineStations.forEach(station => {
+                            let stationId = Number(station.getAttribute('data-metro-map-node-id'));
+                            let stationStops = Array.from(svgImage.querySelectorAll(`#MetroMap_stops .MetroMap_stop[data-station='${stationId}']`)) || null;
+
+                            station.classList.remove('MetroMap_station_item-hover')
+                            if (stationStops !== null) {
+                                stationStops.forEach(stop => {
+                                    stop.classList.remove('MetroMap_stop-hover')
+                                })
+                            }
+                        })
+                    })
+                })
             }
-        }, {passive: false})
-        svgContainer.addEventListener('mousedown', function (event) {
-            isPanning = true;
-            startPoint = {
-                x: event.x,
-                y: event.y,
+            if (allStations !== null) {
+                allStations.forEach(station => {
+                    station.addEventListener('click', function (event) {
+                        if (drag === false) {
+                            let id = event.target.getAttribute('data-metro-map-node-id') || null;
+                            id === null ? id = event.target.parentNode.getAttribute('data-metro-map-node-id') || null : true
+                            id === null ? id = event.target.parentNode.parentNode.getAttribute('data-metro-map-node-id') : true
+                            setSelectedStation(id)
+                        }
+                    })
+                    station.addEventListener('mouseenter', function (event) {
+                        let id = event.target.getAttribute('data-metro-map-node-id')
+                        let stops = Array.from(svgImage.querySelectorAll(`#MetroMap_stops .MetroMap_stop[data-station='${id}']`)) || null;
+
+                        station.classList.add('MetroMap_station_item-hover')
+                        if (stops !== null) {
+                            stops.forEach(stop => {
+                                stop.classList.add('MetroMap_stop-hover')
+                            })
+                        }
+                    })
+                    station.addEventListener('mouseleave', function (event) {
+                        let id = event.target.getAttribute('data-metro-map-node-id')
+                        let stops = Array.from(svgImage.querySelectorAll(`#MetroMap_stops .MetroMap_stop[data-station='${id}']`)) || null;
+
+                        station.classList.remove('MetroMap_station_item-hover')
+                        if (stops !== null) {
+                            stops.forEach(stop => {
+                                stop.classList.remove('MetroMap_stop-hover')
+                            })
+                        }
+                    })
+                })
+            }
+            if (allStops !== null) {
+                allStops.forEach(stop => {
+                    stop.addEventListener('click', function (event) {
+                        if (drag === false) {
+                            let id = event.target.getAttribute('data-station') || null;
+                            id === null ? id = event.target.parentNode.getAttribute('data-station') || null : true
+                            setSelectedStation(id)
+                        }
+                    })
+                    stop.addEventListener('mouseenter', function (event) {
+                        let id = event.target.getAttribute('data-station')
+                        let stops = Array.from(svgImage.querySelectorAll(`#MetroMap_stops .MetroMap_stop[data-station='${id}']`)) || null;
+                        let station = svgImage.querySelector(`#MetroMap_stations .MetroMap_stations_group .MetroMap_station_item[data-metro-map-node-id='${id}']`) || null;
+
+                        if (stops !== null) {
+                            stops.forEach(stop => {
+                                stop.classList.add('MetroMap_stop-hover')
+                            })
+                        }
+                        if (station !== null) {
+                            station.classList.add('MetroMap_station_item-hover')
+                        }
+                    })
+                    stop.addEventListener('mouseleave', function (event) {
+                        let id = event.target.getAttribute('data-station')
+                        let stops = Array.from(svgImage.querySelectorAll(`#MetroMap_stops .MetroMap_stop[data-station='${id}']`)) || null;
+                        let station = svgImage.querySelector(`#MetroMap_stations .MetroMap_stations_group .MetroMap_station_item[data-metro-map-node-id='${id}']`) || null;
+
+                        if (stops !== null) {
+                            stops.forEach(stop => {
+                                stop.classList.remove('MetroMap_stop-hover')
+                            })
+                        }
+                        if (station !== null) {
+                            station.classList.remove('MetroMap_station_item-hover')
+                        }
+                    })
+                })
+            }
+        }
+
+        // Перемещение и приближение
+        const svgZoomIn = document.querySelector('.metro__zoomIn') || null;
+        const svgZoomOut = document.querySelector('.metro__zoomOut') || null;
+
+        if (svgImage !== null && svgContainer !== null) {
+            let startPoint = { x: 0, y: 0 };
+            let endPoint = { x: 0, y: 0 };
+            let scale = 2;
+            let svgContainerSize = {
+                w: svgContainer.clientWidth,
+                h: svgContainer.clientHeight,
             };
-        })
-        svgContainer.addEventListener('mousemove', throttled(20, moveMap))
-        svgContainer.addEventListener('mouseup', function (event) {
-            if (isPanning) {
-                svgContainer.style['cursor'] = 'default';
-                endPoint = {
-                    x: event.x,
-                    y: event.y,
-                };
-                let dx = (startPoint.x - endPoint.x) / scale;
-                let dy = (startPoint.y - endPoint.y) / scale;
-                viewBox = {
-                    x: viewBox.x + dx,
-                    y: viewBox.y + dy,
-                    w: viewBox.w,
-                    h: viewBox.h,
-                };
-                setTransform(viewBox);
-                isPanning = false;
-            }
-        })
-        svgContainer.addEventListener('mouseleave',function (event) {
-            svgContainer.style['cursor'] = 'default';
-            isPanning = false;
-        })
-
-        // Функция перемещения карты
-        function moveMap (event) {
-            if (isPanning) {
-                svgContainer.style['cursor'] = 'grabbing';
-                endPoint = {
-                    x: event.x,
-                    y: event.y,
-                };
-                let dx = (startPoint.x - endPoint.x) / scale;
-                let dy = (startPoint.y - endPoint.y) / scale;
-                let movedViewBox = {
-                    x: viewBox.x + dx,
-                    y: viewBox.y + dy,
-                    w: viewBox.w,
-                    h: viewBox.h,
-                };
-                setTransform(movedViewBox);
-            }
-        }
-
-        // Фикс для обработчиков, с большим потоком данных
-        function throttled (delay, fn) {
-            let lastCall = 0;
-            return function (...args) {
-                const now = (new Date).getTime();
-                if (now - lastCall < delay) {
-                    return;
-                }
-                lastCall = now;
-                return fn(...args)
-            }
-        }
-
-        // Кнопки приближения и отдаления
-        if (svgZoomIn !== null &&  svgZoomOut !== null) {
-            svgZoomIn.addEventListener('click', function () {
-                if (scale <= 2) {
-                    calculateZoom(1, true)
-                }
-            })
-            svgZoomOut.addEventListener('click', function () {
-                if (scale >= 0.3) {
-                    calculateZoom(-1, true)
-                }
-            })
-        }
-
-        // Функция приближения и уменьшения
-        function calculateZoom (direction, button, event) {
-            let w = viewBox.w;
-            let h = viewBox.h;
-            let mx = button === true ? svgContainer.getBoundingClientRect().width / 2 : event.offsetX;
-            let my = button === true ? svgContainer.getBoundingClientRect().height / 2 : event.offsetY;
-            let dw = button === true ? w * direction * 0.1 : w * Math.sign(event.deltaY) * 0.1;
-            let dh = button === true ? h * direction * 0.1 : h * Math.sign(event.deltaY) * 0.1;
-            let dx = (dw * mx) / svgSize.w;
-            let dy = (dh * my) / svgSize.h;
-            viewBox = {
-                x: viewBox.x + dx,
-                y: viewBox.y + dy,
-                w: viewBox.w - dw,
-                h: viewBox.h - dh,
+            let svgSize = {
+                w: svgImage.clientWidth,
+                h: svgImage.clientHeight,
             };
-            scale = svgSize.w / viewBox.w;
+            // TODO: Сделать формулу с учетом scale
+            let viewBox = {
+                w: svgSize.w * scale,
+                h: svgSize.h * scale,
+                x: ((svgContainerSize.w - svgSize.w) / 2 + 352) * -1,
+                y: ((svgContainerSize.h - svgSize.h) / 2 + 582) * -1,
+            };
+
             setTransform(viewBox)
-        }
+            // Пересчет scale для нормальной работы передвижения по карте
+            scale = svgSize.w / viewBox.w;
 
-        // Функция для установки новых значений приближения и перемещения
-        function setTransform (viewBox) {
-            svgImage.setAttribute('viewBox', `${viewBox.x} ${viewBox.y} ${viewBox.w} ${viewBox.h}`);
-        }
-    }
 
-    // Selects
-    let selectLine = metro.querySelector('.select-metro__line') || null;
-    if (selectLine !== null) {
-        VirtualSelect.init({
-            ele: '.select-metro__line',
-            search: true,
-            multiple: true,
-            disableSelectAll: true,
-            placeholder: 'Выбрать линию',
-            noSearchResultsText: 'Ничего не найдено',
-            searchPlaceholderText: 'Поиск',
-            optionsSelectedText: 'линии выбрано',
-            optionSelectedText: 'линия выбрана',
-            allOptionsSelectedText: 'Выбраны все линии',
-            silentInitialValueSet: true,
-            options: [
-                { label: 'Сокольническая линия', value: '632' },
-                { label: 'Замоскворецкая линия', value: '629' },
-                { label: 'Арбатско-Покровская линия', value: '633' },
-                { label: 'Филёвская линия', value: '634' },
-                { label: 'Кольцевая линия', value: '635' },
-                { label: 'Калужско-Рижская линия', value: '631' },
-                { label: 'Таганско-Краснопресненская линия', value: '625' },
-                { label: 'Калининская линия', value: '628' },
-                { label: 'Солнцевская линия', value: '623' },
-                { label: 'Серпуховско-Тимирязевская линия', value: '622' },
-                { label: 'Люблинско-Дмитровская линия', value: '626' },
-                { label: 'Большая кольцевая линия / 1', value: '624' },
-                { label: 'Большая кольцевая линия / 2', value: '627' },
-                { label: 'Бутовская линия', value: '630' },
-                { label: 'Московское центральное кольцо', value: '621' },
-                { label: 'Некрасовская линия', value: '619' },
-                { label: 'МЦД-1', value: '620' },
-                { label: 'МЦД-2', value: '618' },
-            ],
-        });
-        selectLine.addEventListener('change', function () {
-            console.log(this.value)
-        })
-    }
-
-    function getStationName(stationNameText) {
-        let text = '';
-        stationNameText.forEach((el) => {
-            const tspans = Array.from(el.querySelectorAll('tspan')) || null;
-            if (tspans !== null) {
-                tspans.forEach((tspan) => {
-                    let tspanText = tspan.textContent;
-                    if (!tspanText.includes('-')) {
-                        tspanText += ' ';
+            svgContainer.addEventListener('mousewheel', function (event) {
+                event.preventDefault();
+                if (event.wheelDelta >= 0) {
+                    if (scale >= 0.3) {
+                        calculateZoom(-1, false, event)
                     }
-                    text += tspanText;
-                });
+                }
+                else {
+                    if (scale <= 2) {
+                        calculateZoom(1, false, event)
+                    }
+                }
+            }, {passive: false})
+            svgContainer.addEventListener('mousedown', function (event) {
+                click = true;
+                isPanning = true;
+                startPoint = {
+                    x: event.x,
+                    y: event.y,
+                };
+            })
+            svgContainer.addEventListener('mousemove', throttled(20, moveMap))
+            svgContainer.addEventListener('mouseup', function (event) {
+                click = false;
+                if (isPanning) {
+                    svgContainer.style['cursor'] = 'default';
+                    endPoint = {
+                        x: event.x,
+                        y: event.y,
+                    };
+                    let dx = (startPoint.x - endPoint.x) / scale;
+                    let dy = (startPoint.y - endPoint.y) / scale;
+                    viewBox = {
+                        x: viewBox.x + dx,
+                        y: viewBox.y + dy,
+                        w: viewBox.w,
+                        h: viewBox.h,
+                    };
+                    setTransform(viewBox);
+                    isPanning = false
+                }
+            })
+            svgContainer.addEventListener('mouseleave',function (event) {
+                svgContainer.style['cursor'] = 'default';
+                isPanning = false;
+            })
+
+            // Функция перемещения карты
+            function moveMap (event) {
+                if (click) {
+                    drag = true;
+                }
+                else if (!click) {
+                    drag = false;
+                }
+
+                if (isPanning && drag) {
+                    svgContainer.style['cursor'] = 'grabbing';
+                    endPoint = {
+                        x: event.x,
+                        y: event.y,
+                    };
+                    let dx = (startPoint.x - endPoint.x) / scale;
+                    let dy = (startPoint.y - endPoint.y) / scale;
+                    let movedViewBox = {
+                        x: viewBox.x + dx,
+                        y: viewBox.y + dy,
+                        w: viewBox.w,
+                        h: viewBox.h,
+                    };
+                    setTransform(movedViewBox);
+                }
             }
-        });
-        return text.trim();
-    }
 
-    function setSelectedStationsFromLine (id) {
-        let line = svgImage.querySelector(`#MetroMap_lines .MetroMap_line_item[data-metro-map-node-id='${id}']`) || null;
-        if (line === null) return
-        let lineLabels = Array.from(line.querySelectorAll('.MetroMap_label')) || null;
-        let lineStations = Array.from(svgImage.querySelectorAll(`#MetroMap_stations .MetroMap_stations_group[data-line='${id}'] .MetroMap_station_item`)) || null;
+            // Фикс для обработчиков, с большим потоком данных
+            function throttled (delay, fn) {
+                let lastCall = 0;
+                return function (...args) {
+                    const now = (new Date).getTime();
+                    if (now - lastCall < delay) {
+                        return;
+                    }
+                    lastCall = now;
+                    return fn(...args)
+                }
+            }
 
-        if (selLinesId.indexOf(id) !== -1) {
-            if (lineLabels !== null) {
-                lineLabels.forEach(label => {
-                    let circle = label.querySelector('.MetroMap_circle') || null;
-                    if (circle !== null) {
-                        circle.style['stroke'] = stationMarkerNotActive;
-                        circle.style['transition'] = `all ${transitionSpeed}`;
+            // Кнопки приближения и отдаления
+            if (svgZoomIn !== null &&  svgZoomOut !== null) {
+                svgZoomIn.addEventListener('click', function () {
+                    if (scale <= 2) {
+                        calculateZoom(1, true)
+                    }
+                })
+                svgZoomOut.addEventListener('click', function () {
+                    if (scale >= 0.3) {
+                        calculateZoom(-1, true)
                     }
                 })
             }
-            if (lineStations !== null) {
-                lineStations.forEach(station => {
-                    let stationId = Number(station.getAttribute('data-metro-map-node-id'));
-                    let stationName = Array.from(station.querySelectorAll('text')) || null;
-                    let stationBackground = station.querySelector('.MetroMap_bg') || null;
-                    let stationStop = svgImage.querySelector(`#MetroMap_stops .MetroMap_stop[data-station='${stationId}']`) || null;
-                    let name;
+
+            // Функция приближения и уменьшения
+            function calculateZoom (direction, button, event) {
+                let w = viewBox.w;
+                let h = viewBox.h;
+                let mx = button === true ? svgContainer.getBoundingClientRect().width / 2 : event.offsetX;
+                let my = button === true ? svgContainer.getBoundingClientRect().height / 2 : event.offsetY;
+                let dw = button === true ? w * direction * 0.1 : w * Math.sign(event.deltaY) * 0.1;
+                let dh = button === true ? h * direction * 0.1 : h * Math.sign(event.deltaY) * 0.1;
+                let dx = (dw * mx) / svgSize.w;
+                let dy = (dh * my) / svgSize.h;
+                viewBox = {
+                    x: viewBox.x + dx,
+                    y: viewBox.y + dy,
+                    w: viewBox.w - dw,
+                    h: viewBox.h - dh,
+                };
+                scale = svgSize.w / viewBox.w;
+                setTransform(viewBox)
+            }
+
+            // Функция для установки новых значений приближения и перемещения
+            function setTransform (viewBox) {
+                svgImage.setAttribute('viewBox', `${viewBox.x} ${viewBox.y} ${viewBox.w} ${viewBox.h}`);
+            }
+        }
+
+        // Поле выбора линии
+        let selectLine = metro.querySelector('.select-metro__line') || null;
+        if (selectLine !== null) {
+            VirtualSelect.init({
+                ele: '.select-metro__line',
+                search: true,
+                multiple: true,
+                disableSelectAll: true,
+                placeholder: 'Выбрать линию',
+                noSearchResultsText: 'Ничего не найдено',
+                searchPlaceholderText: 'Поиск',
+                optionsSelectedText: 'линии выбрано',
+                optionSelectedText: 'линия выбрана',
+                allOptionsSelectedText: 'Выбраны все линии',
+                silentInitialValueSet: true,
+                options: [
+                    { label: 'Сокольническая линия', value: '632' },
+                    { label: 'Замоскворецкая линия', value: '629' },
+                    { label: 'Арбатско-Покровская линия', value: '633' },
+                    { label: 'Филёвская линия', value: '634' },
+                    { label: 'Кольцевая линия', value: '635' },
+                    { label: 'Калужско-Рижская линия', value: '631' },
+                    { label: 'Таганско-Краснопресненская линия', value: '625' },
+                    { label: 'Калининская линия', value: '628' },
+                    { label: 'Солнцевская линия', value: '623' },
+                    { label: 'Серпуховско-Тимирязевская линия', value: '622' },
+                    { label: 'Люблинско-Дмитровская линия', value: '626' },
+                    { label: 'Большая кольцевая линия / 1', value: '624' },
+                    { label: 'Большая кольцевая линия / 2', value: '627' },
+                    { label: 'Бутовская линия', value: '630' },
+                    { label: 'Московское центральное кольцо', value: '621' },
+                    { label: 'Некрасовская линия', value: '619' },
+                    { label: 'МЦД-1', value: '620' },
+                    { label: 'МЦД-2', value: '618' },
+                ],
+            });
+            watcher(selectLine.value)
+
+            selectLine.addEventListener('change', function () {
+                if (!init) {
+                    setSelectedStationsFromLine(selectLine.value[0])
+                    init = true
+                }
+                watcher(selectLine.value)
+            })
+            selectLine.addEventListener('reset', reset)
+        }
+
+        function reset () {
+            let ids = [];
+            selLinesId.forEach(id => {
+                ids.push(id)
+            })
+            ids.forEach(id => {
+                setSelectedStationsFromLine(id);
+            })
+        }
+        // Получение названия
+        function getStationName(stationNameText) {
+            let text = '';
+            stationNameText.forEach((el) => {
+                const tspans = Array.from(el.querySelectorAll('tspan')) || null;
+                if (tspans !== null) {
+                    tspans.forEach((tspan) => {
+                        let tspanText = tspan.textContent;
+                        if (!tspanText.includes('-')) {
+                            tspanText += ' ';
+                        }
+                        text += tspanText;
+                    });
+                }
+            });
+            return text.trim();
+        }
+
+        // Отслеживание изменений массива
+        function watcher (arr) {
+            arr.concat = function () {
+                console.log('concat');
+                return Array.prototype.concat.apply(this, arguments)
+            }
+            arr.slice = function () {
+                console.log('slice');
+                return Array.prototype.slice.apply(this, arguments)
+            }
+            arr.shift = function () {
+                console.log('shift');
+                return Array.prototype.shift.apply(this, arguments)
+            }
+            arr.unshift = function () {
+                console.log('unshift');
+                return Array.prototype.unshift.apply(this, arguments)
+            }
+            arr.push = function () {
+                console.log('push');
+                setSelectedStationsFromLine(arguments[0])
+                return Array.prototype.push.apply(this, arguments);
+            }
+            arr.splice = function () {
+                console.log('splice');
+                setSelectedStationsFromLine(arr[arguments[0]])
+                return Array.prototype.splice.apply(this, arguments);
+            }
+        }
+
+        // Выбор станции
+        function setSelectedStation (id) {
+            if (id === null) return;
+            let station = svgImage.querySelector(`#MetroMap_stations .MetroMap_station_item[data-metro-map-node-id='${id}']`) || null;
+            let stationName = Array.from(station.querySelectorAll('text')) || null;
+            let stationStops = Array.from(svgImage.querySelectorAll(`#MetroMap_stops .MetroMap_stop[data-station='${id}']`)) || null;
+
+            let name;
+            if (station !== null) {
+                if (selStationsId.indexOf(id) !== -1) {
 
                     if (stationName !== null) {
-                        stationName.forEach(text => {
-                            text.style['fill'] = stationTextNotActive;
-                            text.style['transition'] = `all ${transitionSpeed}`
-                        })
+                        station.classList.remove('MetroMap_station_item-active')
                         name = getStationName(stationName);
                     }
-                    if (stationBackground !== null) {
-                        stationBackground.style['fill'] = stationBgNotActive;
-                        stationBackground.style['opacity'] = 0;
-                        stationBackground.style['transition'] = `all ${transitionSpeed}`;
-                    }
-                    if (stationStop !== null) {
-                        let circle = stationStop.querySelector('.MetroMap_circle') || null;
-                        if (circle !== null) {
-                            circle.style['stroke'] = stationMarkerNotActive;
-                            circle.style['transition'] = `all ${transitionSpeed}`;
-                        }
+                    if (stationStops !== null) {
+                        stationStops.forEach(stop => {
+                            stop.classList.remove('MetroMap_stop-active')
+                        })
                     }
                     if (selStationsText.indexOf(name) !== -1) {
                         selStationsText.splice(selStationsText.indexOf(name), 1);
                     }
-                })
-            }
-            selLinesId.splice(selLinesId.indexOf(id), 1);
-        }
-        else {
-            if (lineLabels !== null) {
-                lineLabels.forEach(label => {
-                    let circle = label.querySelector('.MetroMap_circle') || null;
-                    if (circle !== null) {
-                        circle.style['stroke'] = stationMarkerActive;
-                        circle.style['transition'] = `all ${transitionSpeed}`;
-                    }
-                })
-            }
-            if (lineStations !== null) {
-                lineStations.forEach(station => {
-                    let stationId = Number(station.getAttribute('data-metro-map-node-id'));
-                    let stationName = Array.from(station.querySelectorAll('text')) || null;
-                    let stationBackground = station.querySelector('.MetroMap_bg') || null;
-                    let stationStop = svgImage.querySelector(`#MetroMap_stops .MetroMap_stop[data-station='${stationId}']`) || null;
-                    let name;
+
+                    selStationsId.splice(selStationsId.indexOf(id), 1)
+                }
+                else {
 
                     if (stationName !== null) {
-                        stationName.forEach(text => {
-                            text.style['fill'] = stationTextActive;
-                            text.style['transition'] = `all ${transitionSpeed}`
-                        })
+                        station.classList.add('MetroMap_station_item-active')
                         name = getStationName(stationName);
                     }
-                    if (stationBackground !== null) {
-                        stationBackground.style['fill'] = stationBgActive;
-                        stationBackground.style['opacity'] = 1;
-                        stationBackground.style['transition'] = `all ${transitionSpeed}`;
-                    }
-                    if (stationStop !== null) {
-                        let circle = stationStop.querySelector('.MetroMap_circle') || null;
-                        if (circle !== null) {
-                            circle.style['stroke'] = stationMarkerActive;
-                            circle.style['transition'] = `all ${transitionSpeed}`;
-                        }
+                    if (stationStops !== null) {
+                        stationStops.forEach(stop => {
+                            stop.classList.add('MetroMap_stop-active')
+                        })
                     }
                     if (selStationsText.indexOf(name) === -1) {
                         selStationsText.push(name);
                     }
-                })
+                    selStationsId.push(id)
+                }
             }
-            selLinesId.push(id);
+            console.log(selStationsText, selLinesId, selStationsId)
         }
-        console.log(selStationsText, selLinesId)
+        // Выбор линии
+        function setSelectedStationsFromLine (id) {
+            let line = svgImage.querySelector(`#MetroMap_lines .MetroMap_line_item[data-metro-map-node-id='${id}']`) || null;
+            if (line === null) return
+            let lineLabels = Array.from(line.querySelectorAll('.MetroMap_label')) || null;
+            let lineStations = Array.from(svgImage.querySelectorAll(`#MetroMap_stations .MetroMap_stations_group[data-line='${id}'] .MetroMap_station_item`)) || null;
+
+            if (selLinesId.indexOf(id) !== -1) {
+                if (lineLabels !== null) {
+                    lineLabels.forEach(label => {
+                        label.classList.remove('MetroMap_label-active')
+                    })
+                }
+                if (lineStations !== null) {
+                    lineStations.forEach(station => {
+                        let stationId = Number(station.getAttribute('data-metro-map-node-id'));
+                        let stationName = Array.from(station.querySelectorAll('text')) || null;
+                        let stationStops = Array.from(svgImage.querySelectorAll(`#MetroMap_stops .MetroMap_stop[data-station='${stationId}']`)) || null;
+                        let name;
+
+                        if (stationName !== null) {
+                            station.classList.remove('MetroMap_station_item-active')
+                            name = getStationName(stationName);
+                        }
+                        if (stationStops !== null) {
+                            stationStops.forEach(stop => {
+                                stop.classList.remove('MetroMap_stop-active')
+                            })
+                        }
+                        if (selStationsId.indexOf(String(stationId)) !== -1) {
+                            selStationsId.splice(selStationsId.indexOf(String(stationId)), 1)
+                        }
+                        if (selStationsText.indexOf(name) !== -1) {
+                            selStationsText.splice(selStationsText.indexOf(name), 1);
+                        }
+                    })
+                }
+
+                selLinesId.splice(selLinesId.indexOf(id), 1);
+            }
+            else {
+                if (lineLabels !== null) {
+                    lineLabels.forEach(label => {
+                        label.classList.add('MetroMap_label-active')
+                    })
+                }
+                if (lineStations !== null) {
+                    lineStations.forEach(station => {
+                        let stationId = Number(station.getAttribute('data-metro-map-node-id'));
+                        let stationName = Array.from(station.querySelectorAll('text')) || null;
+                        let stationStops = Array.from(svgImage.querySelectorAll(`#MetroMap_stops .MetroMap_stop[data-station='${stationId}']`)) || null;
+                        let name;
+
+                        if (stationName !== null) {
+                            station.classList.add('MetroMap_station_item-active')
+                            name = getStationName(stationName);
+                        }
+                        if (stationStops !== null) {
+                            stationStops.forEach(stop => {
+                                stop.classList.add('MetroMap_stop-active')
+                            })
+                        }
+                        if (selStationsId.indexOf(String(stationId)) === -1) {
+                            selStationsId.push(String(stationId))
+                        }
+                        if (selStationsText.indexOf(name) === -1) {
+                            selStationsText.push(name);
+                        }
+                    })
+                }
+                selLinesId.push(id);
+            }
+            console.log(selStationsText, selLinesId, selStationsId)
+        }
     }
-}
+});
